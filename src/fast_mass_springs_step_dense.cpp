@@ -19,10 +19,32 @@ void fast_mass_springs_step_dense(
 {
   //////////////////////////////////////////////////////////////////////////////
   // Replace with your code
-  for(int iter = 0;iter < 50;iter++)
-  {
-    const Eigen::MatrixXd l = Ucur;
+  const Eigen::MatrixXd l = Ucur;
+  // pinned vertex penalty
+  // equation from handout
+  double w=1e10;
+  Eigen::MatrixXd term = w /2 *  (C.transpose() * C) * V; //linear term with V
+
+  // equation from the tut slide
+  Eigen::MatrixXd y = 1 / pow(delta_t,2) * M * (2 * Ucur - Uprev) + fext + term;
+
+
+
+  for(int i = 0;i < 50;i++) //50 iterations 
+  { 
+    Eigen::MatrixXd d = Eigen::MatrixXd::Zero(E.rows(), 3); // R ^ n*3
+
+    for (int m = 0; m < d.rows(); m++){
+      // since normalization will have magnitude of 1, r[m], which stores length in rest postion
+      // will help get correct d
+      d.row(m) = (Unext.row(E(m, 0)) - Unext.row(E(m, 1)) ).normalized() * r[m];
+    }
+    Eigen::MatrixXd l = k * A.transpose() * d + y;
     Unext = prefactorization.solve(l);
+
+
+
   }
+  
   //////////////////////////////////////////////////////////////////////////////
 }
